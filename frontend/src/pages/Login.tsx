@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import SignupDialog from "./SignupDialogue";
 
 export default function Login() {
   return (
@@ -79,12 +80,7 @@ export default function Login() {
 
               <p className="text-sm text-white/70">
                 Don’t have an account?{" "}
-                <a
-                  href="/signup"
-                  className="text-blue-400 hover:text-blue-300 underline underline-offset-4"
-                >
-                  Sign up
-                </a>
+                <SignupDialog />
               </p>
             </CardFooter>
           </Card>
