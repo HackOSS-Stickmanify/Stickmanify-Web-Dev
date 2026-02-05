@@ -23,23 +23,10 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Filter pills */}
-      <div className="flex flex-wrap items-center gap-3">
-        <Pill>Name</Pill>
-        <Pill>Category</Pill>
-        <Pill>Date modified</Pill>
-
-        <div className="ml-auto flex items-center gap-2">
-          <Pill>Sort</Pill>
-          <Pill>View</Pill>
-        </div>
-      </div>
-
       {/* Recents */}
       <section className="space-y-3">
         <div className="flex items-end justify-between">
           <h2 className="text-xl font-semibold">Recents</h2>
-          <span className="text-sm text-white/60">Edited recently</span>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
