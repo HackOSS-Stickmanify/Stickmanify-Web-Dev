@@ -2,9 +2,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useNavigate } from "react-router-dom";
+
 import SignupDialog from "./SignupDialogue";
 
 export default function Login() {
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen relative overflow-hidden bg-[#040713] text-white">
       {/* Background shapes (subtle) */}
@@ -74,7 +77,8 @@ export default function Login() {
             </CardContent>
 
             <CardFooter className="flex flex-col gap-3 pt-2">
-              <Button className="h-11 w-full bg-blue-600 hover:bg-blue-700">
+              <Button className="h-11 w-full bg-blue-600 hover:bg-blue-700"
+              onClick={() => navigate("/home")}>
                 LOGIN
               </Button>
 

@@ -1,14 +1,29 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import Login from './pages/Login'
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
-function App() {
+import Login from "./pages/Login";
+import Home from "./pages/Home";
+import AppLayout from "./layouts/AppLayout";
 
-  // Temporary "login method" without auth
-  const isLoggedIn = false;
-  return isLoggedIn ? <Login/> : <Login/>
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        {/* Main page */}
+        <Route path="/" element={<Login />} />
 
+        {/* After login */}
+        <Route
+          path="/home"
+          element={
+            <AppLayout>
+              <Home />
+            </AppLayout>
+          }
+        />
+
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }
-
-export default App
