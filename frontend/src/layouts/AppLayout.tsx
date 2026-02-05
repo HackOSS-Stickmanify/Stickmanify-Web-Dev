@@ -1,5 +1,7 @@
 import { NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import CreateDialog from "@/pages/CreateDialogue";
+
 import { cn } from "@/lib/utils";
 
 import {
@@ -35,12 +37,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 label="Projects"
                 icon={<FolderKanban className="h-5 w-5" />}
               />
-              {/* You asked: U -> C for create */}
-              <SideNavItem
-                to="/create"
-                label="Create"
-                icon={<Plus className="h-5 w-5" />}
-              />
+              {/* Create */}
+              <CreateDialog
+                folders={[
+                    { id: "friends", name: "Friends" },
+                    { id: "family", name: "Family" },
+                    { id: "strangers", name: "Strangers" },
+                ]}
+                />
               <SideNavItem
                 to="/settings"
                 label="Settings"
