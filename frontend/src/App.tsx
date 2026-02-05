@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import Home from "./pages/Home";
 import Projects from "./pages/Projects";
+import Settings from "./pages/Settings";
 import AppLayout from "./layouts/AppLayout";
 
 export default function App() {
@@ -30,6 +31,16 @@ export default function App() {
             </AppLayout>
           }
         />
+
+        <Route
+          path="/settings"
+          element={
+            <AppLayout>
+              <Settings />
+            </AppLayout>
+          }
+        />
+
 
 
         {/* Fallback */}
