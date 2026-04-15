@@ -15,66 +15,49 @@ export default function SignupDialog() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <button className="text-blue-400 hover:text-blue-300 underline underline-offset-4">
+        <button className="text-black/75 underline underline-offset-4 hover:text-black transition font-medium">
           Sign up
         </button>
       </DialogTrigger>
 
-      <DialogContent
-        className="
-          sm:max-w-md
-          border border-white/10
-          bg-[#0b1022]/80
-          text-white
-          shadow-2xl
-          backdrop-blur-xl
-        "
-      >
+      <DialogContent className="sm:max-w-sm border border-black/10 bg-white text-black shadow-xl">
         <DialogHeader>
-          <DialogTitle className="text-white">Create an account</DialogTitle>
-          <DialogDescription className="text-white/70">
-            Please enter your details to sign up.
+          <DialogTitle className="text-black">Create an account</DialogTitle>
+          <DialogDescription className="text-black/45">
+            Join Stickmanify and start creating animations.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-4 mt-1">
           <div className="space-y-2">
-            <Label htmlFor="signup-name" className="text-xs text-white/60">
-              Name
-            </Label>
+            <Label htmlFor="signup-name" className="text-xs text-black/50">Name</Label>
             <Input
               id="signup-name"
-              placeholder="Example Person"
-              className="h-11 bg-white/10 text-white placeholder:text-white/40 border-white/10"
+              placeholder="Your name"
+              className="h-11 bg-white text-black placeholder:text-black/25 border-black/10 focus-visible:ring-black/20"
             />
           </div>
-
           <div className="space-y-2">
-            <Label htmlFor="signup-email" className="text-xs text-white/60">
-              Email
-            </Label>
+            <Label htmlFor="signup-email" className="text-xs text-black/50">Email</Label>
             <Input
               id="signup-email"
-              placeholder="example@gmail.com"
-              className="h-11 bg-white/10 text-white placeholder:text-white/40 border-white/10"
+              placeholder="you@example.com"
+              className="h-11 bg-white text-black placeholder:text-black/25 border-black/10 focus-visible:ring-black/20"
             />
           </div>
-
           <div className="space-y-2">
-            <Label htmlFor="signup-password" className="text-xs text-white/60">
-              Password
-            </Label>
+            <Label htmlFor="signup-password" className="text-xs text-black/50">Password</Label>
             <Input
               id="signup-password"
               type="password"
               placeholder="••••••••"
-              className="h-11 bg-white/10 text-white placeholder:text-white/40 border-white/10"
+              className="h-11 bg-white text-black placeholder:text-black/25 border-black/10 focus-visible:ring-black/20"
             />
           </div>
         </div>
 
         <DialogFooter className="mt-2">
-          <Button className="h-11 w-full bg-blue-600 hover:bg-blue-700">
+          <Button className="h-11 w-full rounded-full bg-black text-white font-bold hover:bg-black/85">
             Create account
           </Button>
         </DialogFooter>
