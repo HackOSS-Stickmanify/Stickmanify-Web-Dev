@@ -1,57 +1,100 @@
-import { useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Folder } from "lucide-react";
+import { ExternalLink, Trash2 } from "lucide-react";
 import CreateDialog from "@/pages/CreateDialogue";
-
-const FOLDERS = [
-  { id: "friends",   name: "Friends"   },
-  { id: "family",    name: "Family"    },
-  { id: "strangers", name: "Strangers" },
-];
+import {
+  deleteJob,
+  getDownloadUrl,
+  getJobCount,
+  listCompletedJobs,
+  type CompletedJob,
+} from "@/lib/api";
 
 export default function Home() {
-  const [prompt, setPrompt]         = useState("");
+  const [prompt, setPrompt] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [completedJobs, setCompletedJobs] = useState<CompletedJob[]>([]);
+  const [jobCount, setJobCount] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [actionError, setActionError] = useState("");
+  const [downloadingId, setDownloadingId] = useState<number | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+
+  const recentJobs = useMemo(() => completedJobs.slice(0, 6), [completedJobs]);
+
+  const loadJobs = useCallback(async () => {
+    setLoading(true);
+    setError("");
+
+    try {
+      const [jobs, count] = await Promise.all([
+        listCompletedJobs(),
+        getJobCount(),
+      ]);
+      setCompletedJobs(jobs);
+      setJobCount(count);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not load jobs.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadJobs();
+  }, [loadJobs]);
+
+  async function handleOpen(job: CompletedJob) {
+    if (!job.stickmanifiedS3ObjectKey) return;
+
+    setActionError("");
+    setDownloadingId(job.jobId);
+
+    try {
+      const url = await getDownloadUrl(job.stickmanifiedS3ObjectKey);
+      window.open(url, "_blank", "noopener,noreferrer");
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "Could not open the download.");
+    } finally {
+      setDownloadingId(null);
+    }
+  }
+
+  async function handleDelete(job: CompletedJob) {
+    setActionError("");
+    setDeletingId(job.jobId);
+
+    try {
+      await deleteJob(job.jobId);
+      await loadJobs();
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "Could not delete the job.");
+    } finally {
+      setDeletingId(null);
+    }
+  }
 
   return (
     <div className="space-y-10">
-
-      {/* ── Hero ─────────────────────────────────────────────── */}
       <div className="relative text-center pt-2">
-        {/* decorative stickman — left */}
         <div className="pointer-events-none absolute -left-2 top-0 opacity-[0.09] anim-sway hidden lg:block">
-          <svg viewBox="0 0 44 80" width="52" fill="none" stroke="black" strokeWidth="2.5" strokeLinecap="round">
-            <circle cx="22" cy="8" r="7"/>
-            <line x1="22" y1="15" x2="22" y2="46"/>
-            <line x1="22" y1="24" x2="6"  y2="14"/>
-            <line x1="22" y1="24" x2="38" y2="30"/>
-            <line x1="22" y1="46" x2="8"  y2="70"/>
-            <line x1="22" y1="46" x2="36" y2="70"/>
-          </svg>
+          <StickmanIcon width={52} strokeWidth={2.5} />
         </div>
-        {/* decorative stickman — right */}
         <div className="pointer-events-none absolute -right-2 top-0 opacity-[0.07] anim-bounce hidden lg:block">
-          <svg viewBox="0 0 44 80" width="52" fill="none" stroke="black" strokeWidth="2.5" strokeLinecap="round">
-            <circle cx="22" cy="8" r="7"/>
-            <line x1="22" y1="15" x2="22" y2="46"/>
-            <line x1="22" y1="24" x2="6"  y2="12"/>
-            <line x1="22" y1="24" x2="38" y2="30"/>
-            <line x1="22" y1="46" x2="8"  y2="70"/>
-            <line x1="22" y1="46" x2="36" y2="70"/>
-          </svg>
+          <StickmanIcon width={52} strokeWidth={2.5} />
         </div>
 
         <h1 className="text-4xl font-extrabold tracking-tight text-black">
           What would you Stickmanify today?
         </h1>
         <p className="mt-2 text-sm text-black/40">
-          Type a prompt or upload a video — we'll turn it into a stickman animation.
+          Type a prompt or upload a video and we'll turn it into a stickman animation.
         </p>
       </div>
 
-      {/* ── Search / prompt bar ──────────────────────────────── */}
       <div className="flex justify-center">
         <div className="w-full max-w-3xl">
           <div className="flex items-center gap-2 rounded-full border border-black/10 bg-white px-3 py-2 shadow-sm">
@@ -72,90 +115,110 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Hidden dialog triggered by GO */}
       <CreateDialog
-        folders={FOLDERS}
         triggerVariant="none"
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         initialPrompt={prompt}
+        onJobCreated={loadJobs}
       />
 
-      {/* ── Recents ──────────────────────────────────────────── */}
       <section className="space-y-3">
         <div className="flex items-end justify-between">
-          <h2 className="text-xl font-semibold text-black">Recents</h2>
-          <span className="text-xs text-black/35">Sorted by last edited</span>
+          <h2 className="text-xl font-semibold text-black">Recent jobs</h2>
+          <span className="text-xs text-black/35">
+            {jobCount === null ? `${recentJobs.length} visible` : `${jobCount} total`}
+          </span>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <Card
-              key={i}
-              className="rounded-2xl border border-black/8 bg-white text-black shadow-sm cursor-pointer hover:shadow-md hover:border-black/14 transition group"
-            >
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm text-black/75">
-                  Untitled Design {i + 1}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {/* Preview with stickman */}
-                <div className="h-28 rounded-xl bg-black/3 border border-black/6 flex items-center justify-center overflow-hidden">
-                  <svg viewBox="0 0 44 80" width="28" fill="none" stroke="black" strokeWidth="3" strokeLinecap="round"
-                    className="opacity-10 group-hover:opacity-20 transition">
-                    <circle cx="22" cy="8" r="7"/>
-                    <line x1="22" y1="15" x2="22" y2="46"/>
-                    <line x1="22" y1="24" x2="6"  y2="18"/>
-                    <line x1="22" y1="24" x2="38" y2="30"/>
-                    <line x1="22" y1="46" x2="8"  y2="70"/>
-                    <line x1="22" y1="46" x2="36" y2="70"/>
-                  </svg>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-black/35">Edited 2 days ago</span>
-                  <span className="text-xs rounded-full border border-black/12 px-2 py-0.5 text-black/45">
-                    Draft
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </section>
+        {(error || actionError) && (
+          <p className="rounded-xl border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-600">
+            {actionError || error}
+          </p>
+        )}
 
-      {/* ── Folders ──────────────────────────────────────────── */}
-      <section className="space-y-3">
-        <h2 className="text-xl font-semibold text-black">Folders</h2>
-
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <FolderCard title="Friends"   subtitle="12 items" />
-          <FolderCard title="Family"    subtitle="4 items"  />
-          <FolderCard title="Strangers" subtitle="7 items"  />
-        </div>
+        {loading ? (
+          <EmptyState message="Loading jobs..." />
+        ) : recentJobs.length === 0 ? (
+          <EmptyState message="No completed jobs yet" />
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {recentJobs.map((job) => (
+              <Card
+                key={job.jobId}
+                className="rounded-2xl border border-black/8 bg-white text-black shadow-sm hover:shadow-md hover:border-black/14 transition group"
+              >
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm text-black/75">
+                    {job.jobName || `Job #${job.jobId}`}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="h-28 rounded-xl bg-black/3 border border-black/6 flex items-center justify-center overflow-hidden">
+                    <StickmanIcon width={28} strokeWidth={3} className="opacity-10 group-hover:opacity-20 transition" />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs rounded-full border border-black/12 px-2 py-0.5 text-black/45">
+                      Done
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        className="h-8 w-8 px-0 rounded-full text-black/35 hover:text-black hover:bg-black/6"
+                        disabled={!job.stickmanifiedS3ObjectKey || downloadingId === job.jobId}
+                        onClick={() => handleOpen(job)}
+                        aria-label={`Open ${job.jobName || `Job #${job.jobId}`}`}
+                      >
+                        <ExternalLink className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        className="h-8 w-8 px-0 rounded-full text-black/35 hover:text-red-500 hover:bg-red-50"
+                        disabled={deletingId === job.jobId}
+                        onClick={() => handleDelete(job)}
+                        aria-label={`Delete ${job.jobName || `Job #${job.jobId}`}`}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );
 }
 
-function FolderCard({ title, subtitle }: { title: string; subtitle: string }) {
+function EmptyState({ message }: { message: string }) {
   return (
-    <Card className="rounded-2xl border border-black/8 bg-white text-black shadow-sm hover:shadow-md hover:border-black/14 transition cursor-pointer">
-      <CardContent className="flex items-center gap-3 py-5">
-        <div className="h-10 w-10 rounded-xl bg-black/5 border border-black/8 flex items-center justify-center">
-          <Folder className="h-5 w-5 text-black/40" />
-        </div>
-        <div className="flex-1">
-          <div className="text-sm font-semibold text-black/75">{title}</div>
-          <div className="text-xs text-black/35">{subtitle}</div>
-        </div>
-        <Button
-          variant="secondary"
-          className="h-8 rounded-full bg-black/5 border border-black/8 px-4 text-black/60 hover:bg-black hover:text-white transition text-xs font-semibold"
-        >
-          Open
-        </Button>
-      </CardContent>
-    </Card>
+    <div className="flex flex-col items-center justify-center py-14 gap-4 text-black/30">
+      <StickmanIcon width={40} strokeWidth={2.5} className="opacity-15 anim-sway" />
+      <p className="text-sm">{message}</p>
+    </div>
+  );
+}
+
+function StickmanIcon({
+  width,
+  strokeWidth,
+  className,
+}: {
+  width: number;
+  strokeWidth: number;
+  className?: string;
+}) {
+  return (
+    <svg viewBox="0 0 44 80" width={width} fill="none" stroke="black" strokeWidth={strokeWidth} strokeLinecap="round"
+      className={className}>
+      <circle cx="22" cy="8" r="7"/>
+      <line x1="22" y1="15" x2="22" y2="46"/>
+      <line x1="22" y1="24" x2="6"  y2="18"/>
+      <line x1="22" y1="24" x2="38" y2="30"/>
+      <line x1="22" y1="46" x2="8"  y2="70"/>
+      <line x1="22" y1="46" x2="36" y2="70"/>
+    </svg>
   );
 }

@@ -3,6 +3,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import CreateDialog from "@/pages/CreateDialogue";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/lib/supabase";
 
 import {
   Home as HomeIcon,
@@ -13,16 +14,15 @@ import {
   X,
 } from "lucide-react";
 
-const FOLDERS = [
-  { id: "friends",   name: "Friends"   },
-  { id: "family",    name: "Family"    },
-  { id: "strangers", name: "Strangers" },
-];
-
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const [notifOpen, setNotifOpen] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
+
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    navigate("/");
+  }
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -140,7 +140,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <Button
           variant="ghost"
           className="h-9 px-3 rounded-full text-black/50 hover:text-black hover:bg-black/6 text-sm gap-2"
-          onClick={() => navigate("/")}
+          onClick={handleLogout}
         >
           <LogOut className="h-4 w-4" />
           <span className="hidden sm:inline">Logout</span>
@@ -155,7 +155,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <div className="flex flex-col items-center gap-2">
             <SideNavItem to="/home"     label="Home"     icon={<HomeIcon     className="h-5 w-5" />} />
             <SideNavItem to="/projects" label="Projects" icon={<FolderKanban className="h-5 w-5" />} />
-            <CreateDialog folders={FOLDERS} triggerVariant="sidebar" />
+            <CreateDialog triggerVariant="sidebar" />
           </div>
           <div className="mt-auto">
             <SideNavItem to="/settings" label="Settings" icon={<Settings className="h-5 w-5" />} />

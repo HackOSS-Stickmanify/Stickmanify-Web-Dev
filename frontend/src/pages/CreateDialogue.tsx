@@ -9,38 +9,29 @@ import {
   DialogContent,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { uploadAndCreateJob } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 import { Plus, Upload, Check, ArrowLeft, ArrowRight, Sparkles } from "lucide-react";
 
-type Folder = { id: string; name: string };
-
 const STEPS = [
   { title: "Your Prompt",   desc: "What should we create?"   },
   { title: "Upload Video",  desc: "Add your source footage"  },
-  { title: "Organize",      desc: "Choose a folder"          },
   { title: "Final Touches", desc: "Notes & review"           },
 ];
 
 export default function CreateDialog({
-  folders = [],
   triggerVariant = "sidebar",
   open: controlledOpen,
   onOpenChange: setControlledOpen,
   initialPrompt = "",
+  onJobCreated,
 }: {
-  folders?: Folder[];
   triggerVariant?: "sidebar" | "button" | "none";
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   initialPrompt?: string;
+  onJobCreated?: () => void;
 }) {
   const [internalOpen, setInternalOpen] = useState(false);
   const isOpen  = controlledOpen  !== undefined ? controlledOpen  : internalOpen;
@@ -48,12 +39,19 @@ export default function CreateDialog({
 
   const [step,     setStep]     = useState(0);
   const [name,     setName]     = useState(initialPrompt);
-  const [folderId, setFolderId] = useState<string>("none");
   const [remarks,  setRemarks]  = useState("");
   const [file,     setFile]     = useState<File | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   function handleOpenChange(v: boolean) {
-    if (v) { setName(initialPrompt || ""); setStep(0); }
+    if (v) {
+      setName(initialPrompt || "");
+      setStep(0);
+      setError("");
+      setSuccess("");
+    }
     setOpen(v);
   }
 
@@ -62,10 +60,27 @@ export default function CreateDialog({
     return `${file.name}  (${Math.round(file.size / 1024 / 1024)} MB)`;
   }, [file]);
 
-  function handleCreate() {
-    console.log("CREATE:", { name, folderId, remarks, file });
-    setName(""); setFolderId("none"); setRemarks(""); setFile(null); setStep(0);
-    setOpen(false);
+  async function handleCreate() {
+    if (!file) return;
+
+    setIsSubmitting(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      await uploadAndCreateJob(file);
+      setSuccess("Job queued successfully.");
+      setName("");
+      setRemarks("");
+      setFile(null);
+      setStep(0);
+      onJobCreated?.();
+      setOpen(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not create the job.");
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   function canNext() {
@@ -210,26 +225,8 @@ export default function CreateDialog({
                   </div>
                 )}
 
-                {/* Step 2: Folder */}
-                {step === 2 && (
-                  <div className="space-y-3">
-                    <Label className="text-xs text-black/50">Which folder? (optional)</Label>
-                    <Select value={folderId} onValueChange={setFolderId}>
-                      <SelectTrigger className="h-11 rounded-2xl border-black/10 bg-white text-black focus:ring-black/20">
-                        <SelectValue placeholder="Select a folder" />
-                      </SelectTrigger>
-                      <SelectContent className="border-black/10 bg-white text-black shadow-xl">
-                        <SelectItem value="none">No folder</SelectItem>
-                        {folders.map((f) => (
-                          <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-
                 {/* Step 3: Remarks + review */}
-                {step === 3 && (
+                {step === 2 && (
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="creation-remarks" className="text-xs text-black/50">
@@ -248,9 +245,19 @@ export default function CreateDialog({
                       <p className="text-xs text-black/40 uppercase tracking-wider font-semibold mb-2">Summary</p>
                       <Row label="Name"   value={name || "—"} />
                       <Row label="Video"  value={file ? file.name : "—"} />
-                      <Row label="Folder" value={folders.find(f => f.id === folderId)?.name ?? "None"} />
                     </div>
                   </div>
+                )}
+
+                {error && (
+                  <p className="mt-4 rounded-xl border border-red-100 bg-red-50 px-3 py-2 text-xs text-red-600">
+                    {error}
+                  </p>
+                )}
+                {success && (
+                  <p className="mt-4 rounded-xl border border-black/10 bg-black/4 px-3 py-2 text-xs text-black/55">
+                    {success}
+                  </p>
                 )}
               </div>
 
@@ -273,15 +280,16 @@ export default function CreateDialog({
                 {step < STEPS.length - 1 ? (
                   <Button
                     className="h-10 px-6 rounded-full bg-black text-white font-semibold hover:bg-black/85 gap-2 disabled:opacity-30"
-                    disabled={!canNext()}
+                    disabled={!canNext() || isSubmitting}
                     onClick={() => setStep((s) => s + 1)}>
                     Next <ArrowRight className="h-4 w-4" />
                   </Button>
                 ) : (
                   <Button
                     className="h-10 px-6 rounded-full bg-black text-white font-semibold hover:bg-black/85"
+                    disabled={isSubmitting}
                     onClick={handleCreate}>
-                    Create
+                    {isSubmitting ? "Creating..." : "Create"}
                   </Button>
                 )}
               </div>

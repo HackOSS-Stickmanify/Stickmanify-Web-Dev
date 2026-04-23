@@ -5,6 +5,7 @@ import Home from "./pages/Home";
 import Projects from "./pages/Projects";
 import Settings from "./pages/Settings";
 import AppLayout from "./layouts/AppLayout";
+import RequireAuth from "./components/RequireAuth";
 
 export default function App() {
   return (
@@ -17,27 +18,33 @@ export default function App() {
         <Route
           path="/home"
           element={
-            <AppLayout>
-              <Home />
-            </AppLayout>
+            <RequireAuth>
+              <AppLayout>
+                <Home />
+              </AppLayout>
+            </RequireAuth>
           }
         />
 
-                <Route
+        <Route
           path="/projects"
           element={
-            <AppLayout>
-              <Projects />
-            </AppLayout>
+            <RequireAuth>
+              <AppLayout>
+                <Projects />
+              </AppLayout>
+            </RequireAuth>
           }
         />
 
         <Route
           path="/settings"
           element={
-            <AppLayout>
-              <Settings />
-            </AppLayout>
+            <RequireAuth>
+              <AppLayout>
+                <Settings />
+              </AppLayout>
+            </RequireAuth>
           }
         />
 
