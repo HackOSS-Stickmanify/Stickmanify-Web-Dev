@@ -24,7 +24,7 @@ export default function CreateDialog({
   triggerVariant = "sidebar",
   open: controlledOpen,
   onOpenChange: setControlledOpen,
-  initialPrompt = "",
+  // initialPrompt = "",
   onJobCreated,
 }: {
   triggerVariant?: "sidebar" | "button" | "none";

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+// import { Input } from "@/components/ui/input";
 import { ExternalLink, Trash2 } from "lucide-react";
 import CreateDialog from "@/pages/CreateDialogue";
 import {
@@ -13,7 +13,7 @@ import {
 } from "@/lib/api";
 
 export default function Home() {
-  const [prompt, setPrompt] = useState("");
+  const [prompt] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [completedJobs, setCompletedJobs] = useState<CompletedJob[]>([]);
   const [jobCount, setJobCount] = useState<number | null>(null);
@@ -91,7 +91,7 @@ export default function Home() {
           What would you Stickmanify today?
         </h1>
         <p className="mt-2 text-sm text-black/40">
-          Type a prompt or upload a video and we'll turn it into a stickman animation.
+          Upload a video and we'll turn it into a stickman animation.
         </p>
       </div>
 
