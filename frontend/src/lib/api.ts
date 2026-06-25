@@ -65,20 +65,30 @@ export async function getUploadUrl() {
 }
 
 export async function uploadVideoToSignedUrl(uploadUrl: string, file: File) {
-  const body = new FormData();
-  body.append("file", file);
-
+  // 1. Remove the FormData wrapper completely.
+  // 2. Send the raw file directly as the body using the PUT method.
   const response = await fetch(uploadUrl, {
-    method: "POST",
-    body,
+    method: "PUT",
+    headers: {
+      "Content-Type": file.type, // Tells S3 exactly what file format is being uploaded
+    },
+    body: file, // Sent as raw binary stream
   });
 
   if (!response.ok) throw new Error(await readError(response));
 }
 
 export async function createProcessingJob(objectKey: string) {
-  await apiFetch(`/jobs/create/${encodePathValue(objectKey)}`, {
+  // Pass the payload as a JSON string inside the request body
+  await apiFetch("/jobs/create", {
     method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      objectKey: objectKey,
+      jobName: null // Or pass a name string if your UI collects one
+    }),
   });
 }
 
