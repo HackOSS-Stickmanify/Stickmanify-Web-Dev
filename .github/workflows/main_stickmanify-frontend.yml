@@ -18,22 +18,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Sets up node environment
       - name: Set up Node.js version
         uses: actions/setup-node@v3
         with:
           node-version: '24.x'
 
+      # MODIFIED HERE: Added working-directory to run commands inside the subfolder
       - name: npm install, build, and test
+        working-directory: ./frontend
         run: |
           npm install
           npm run build --if-present
           npm run test --if-present
 
+      # MODIFIED HERE: Pointed path to frontend/dist so only the compiled bundle is uploaded
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: node-app
-          path: .
+          path: frontend/dist
 
   deploy:
     runs-on: ubuntu-latest
@@ -62,4 +66,3 @@ jobs:
           app-name: 'stickmanify-frontend'
           slot-name: 'Production'
           package: .
-          
