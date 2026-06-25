@@ -38,7 +38,8 @@ export default function CreateDialog({
   const setOpen = setControlledOpen ?? setInternalOpen;
 
   const [step,     setStep]     = useState(0);
-  const [name,     setName]     = useState(initialPrompt);
+  // const [name,     setName]     = useState(initialPrompt);
+  const [name,     setName]     = useState("");
   const [remarks,  setRemarks]  = useState("");
   const [file,     setFile]     = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -47,7 +48,7 @@ export default function CreateDialog({
 
   function handleOpenChange(v: boolean) {
     if (v) {
-      setName(initialPrompt || "");
+      // setName(initialPrompt || "");
       setStep(0);
       setError("");
       setSuccess("");
@@ -63,12 +64,19 @@ export default function CreateDialog({
   async function handleCreate() {
     if (!file) return;
 
+    const jobNamePayload = name.trim();
+
     setIsSubmitting(true);
     setError("");
     setSuccess("");
 
     try {
-      await uploadAndCreateJob(file);
+      await uploadAndCreateJob(file, jobNamePayload);
+//       console.log("Current file state:", file);
+//       console.log("Current name state:", name); // <-- Is this printing an empty string or undefined?
+//       if (!name) {
+//   console.error("Job name state is empty before calling API!");
+// }
       setSuccess("Job queued successfully.");
       setName("");
       setRemarks("");

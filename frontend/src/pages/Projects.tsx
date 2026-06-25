@@ -306,14 +306,41 @@ function ProjectCard({
   onDownload: (project: Project) => void;
   onDelete: (project: Project) => void;
 }) {
+  const [videoSrc, setVideoSrc] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Only attempt to fetch a signed URL if the job is completed and has an object key
+    if (project.status === "Done" && project.objectKey) {
+      getDownloadUrl(project.objectKey)
+        .then((authenticatedUrl) => {
+          setVideoSrc(authenticatedUrl);
+        })
+        .catch((err) => {
+          console.error("Failed to fetch signed preview URL for project:", project.id, err);
+        });
+    }
+  }, [project.status, project.objectKey, project.id]);
+
   return (
     <Card className="rounded-2xl border border-black/8 bg-white text-black shadow-sm hover:shadow-md hover:border-black/14 transition group">
       <div className="p-4 pb-2">
         <p className="text-sm font-semibold text-black/75 leading-snug">{project.name}</p>
       </div>
       <div className="px-4 pb-4 space-y-3">
-        <div className="h-32 rounded-xl bg-black/3 border border-black/6 flex items-center justify-center">
-          <StickmanIcon className="opacity-10 group-hover:opacity-20 transition" width={24} />
+        {/* Video Wrapper Container */}
+        <div className="h-32 rounded-xl bg-black/3 border border-black/6 flex items-center justify-center overflow-hidden relative">
+          {project.status === "Done" && videoSrc ? (
+            <video
+              src={videoSrc} // Uses the resolved signed URL containing AWS auth parameters
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="w-full h-full object-contain"
+            />
+          ) : (
+            <StickmanIcon className="opacity-10 group-hover:opacity-20 transition" width={24} />
+          )}
         </div>
         <div className="flex items-center justify-between">
           <span className="text-xs text-black/35">{project.edited}</span>

@@ -78,7 +78,7 @@ export async function uploadVideoToSignedUrl(uploadUrl: string, file: File) {
   if (!response.ok) throw new Error(await readError(response));
 }
 
-export async function createProcessingJob(objectKey: string) {
+export async function createProcessingJob(objectKey: string, jobName: string) {
   // Pass the payload as a JSON string inside the request body
   await apiFetch("/jobs/create", {
     method: "POST",
@@ -87,16 +87,16 @@ export async function createProcessingJob(objectKey: string) {
     },
     body: JSON.stringify({
       objectKey: objectKey,
-      jobName: null // Or pass a name string if your UI collects one
+      jobName: jobName // Or pass a name string if your UI collects one
     }),
   });
 }
 
-export async function uploadAndCreateJob(file: File) {
+export async function uploadAndCreateJob(file: File, jobName: string) {
   const uploadUrl = await getUploadUrl();
   await uploadVideoToSignedUrl(uploadUrl, file);
   const objectKey = getObjectKeyFromUploadUrl(uploadUrl);
-  await createProcessingJob(objectKey);
+  await createProcessingJob(objectKey, jobName);
   return objectKey;
 }
 

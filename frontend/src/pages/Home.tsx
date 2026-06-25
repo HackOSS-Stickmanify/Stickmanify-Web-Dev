@@ -96,22 +96,22 @@ export default function Home() {
       </div>
 
       <div className="flex justify-center">
-        <div className="w-full max-w-3xl">
-          <div className="flex items-center gap-2 rounded-full border border-black/10 bg-white px-3 py-2 shadow-sm">
-            <Input
+        <div className="w-full max-w-3xl flex justify-center">
+          {/* <div className="flex items-center gap-2 rounded-full border border-black/10 bg-white px-3 py-2 shadow-sm"> */}
+            {/* <Input
               placeholder="Enter a prompt / Upload a video"
               className="h-11 flex-1 border-0 bg-transparent text-black placeholder:text-black/30 focus-visible:ring-0 shadow-none"
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") setDialogOpen(true); }}
-            />
+            /> */}
             <Button
               className="h-10 rounded-full bg-black text-white font-bold px-6 hover:bg-black/85 transition"
               onClick={() => setDialogOpen(true)}
             >
-              GO!
+              Try it!
             </Button>
-          </div>
+          {/* </div> */}
         </div>
       </div>
 
